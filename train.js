@@ -83,6 +83,31 @@ var login = function(email, pass) {
 			});
 		});
 	});
+
+
+	// TESTE
+	casper.thenOpen('http://google.com', function() {
+		
+		casper.log('Loading Google Search...', 'info');
+	    casper.waitForSelector('form[action="/search"]', function() {
+	    	screenshot('googlehome');
+	    	casper.log('Google page loaded','info');
+
+	    	this.fillSelectors('form[name="f"]', {
+	    		'input[title="Pesquisa Google"]' : query
+	    	}, true);
+
+
+	    	casper.log('Searching...','info')
+	    	// casper.waitForSelector('div#foot', function() {
+	    	casper.waitForText('Pesquisas relacionadas', function() {
+	    		casper.log('Results page loaded','info')
+	    		screenshot('resultpage')
+	    	});
+	    });
+	});
+
+
 }
 
 var searchFor = function(query) {
@@ -139,7 +164,7 @@ login('alegomes@gmail.com','!2#Pipoc@')
 // const google_email = env.MY_GOOGLE_EMAIL;
 // const google_passwd = env.MY_GOOGLE_PASSWD;
 
-searchFor('arroz')
+// searchFor('arroz')
 
 
 casper.run();
