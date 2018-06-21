@@ -20,14 +20,12 @@ var getFilename = function(prefix, extension) {
 }
 
 var saveHtmlPage = function(qualifier) {
-    // casper.then(function() { // Otherwise
-        casper.log("[saveHtmlPage] Saving HTML...",'debug');
-        var html = String(casper.getHTML()); // grab our HTML (http://casperjs.readthedocs.org/en/latest/modules/casper.html#gethtml)
-        // var filename = getFilename(target.replace(/[^A-z]/g, ''), 'html') ; // create a sanitized filename by removing all the non A-Z characters (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)
-        var filename = getFilename('page-'+qualifier, 'html');
-        fs.write(filename, html, 'w'); // and save it to a file (https://docs.nodejitsu.com/articles/file-system/how-to-write-files-in-nodejs)
-        casper.log("[saveHtmlPage] HTML saved at " + filename,'info');
-    // });
+    casper.log("[saveHtmlPage] Saving HTML...",'debug');
+    var html = String(casper.getHTML()); // grab our HTML (http://casperjs.readthedocs.org/en/latest/modules/casper.html#gethtml)
+    // var filename = getFilename(target.replace(/[^A-z]/g, ''), 'html') ; // create a sanitized filename by removing all the non A-Z characters (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)
+    var filename = getFilename('page-'+qualifier, 'html');
+    fs.write(filename, html, 'w'); // and save it to a file (https://docs.nodejitsu.com/articles/file-system/how-to-write-files-in-nodejs)
+    casper.log("[saveHtmlPage] HTML saved at " + filename,'info');
 }
 
 var screenshot = function(qualifier) {
@@ -93,9 +91,13 @@ var login = function(email, pass) {
 		screenshot('5loggedin');
 	})
 
+}
+
+var searchFor = function(query) {
+
 	casper.thenOpen('http://google.com/', function() {
 		this.waitForSelector('form[action="/search"]')
-		screenshot('6googlehome1')
+		screenshot('6googlehome')
 	});
 
 	casper.then(function() {
@@ -108,58 +110,27 @@ var login = function(email, pass) {
 		casper.waitForText('Pesquisas relacionadas', function() {
     		casper.log('Results page loaded','info')
     		screenshot('7resultpage')
+    		saveHtmlPage('7resultpage')
     	});
 	})
 
-	// TESTE
-	// casper.thenOpen('http://google.com', function() {
-		
-	// 	casper.log('Loading Google Search...', 'info');
-	//     casper.waitForSelector('form[action="/search"]', function() {
-	//     	screenshot('googlehome2');
-	//     	casper.log('Google page loaded','info');
-
-	//     	this.fillSelectors('form[name="f"]', {
-	//     		'input[title="Pesquisa Google"]' : 'arroz'
-	//     	}, true);
-
-
-	//     	casper.log('Searching...','info')
-	//     	// casper.waitForSelector('div#foot', function() {
-	//     	casper.waitForText('Pesquisas relacionadas', function() {
-	//     		casper.log('Results page loaded','info')
-	//     		screenshot('resultpage')
-	//     	});
-	//     });
-	// });
-
-
 }
 
-var searchFor = function(query) {
+var logout = function() {
 
-	casper.thenOpen('http://google.com', function() {
-		
-		casper.log('Loading Google Search...', 'info');
-	    casper.waitForSelector('form[action="/search"]', function() {
-	    	screenshot('googlehome');
-	    	casper.log('Google page loaded','info');
+	logouturl = 'https://accounts.google.com/Logout';
+	casper.log('Signing out','info')
+	casper.thenOpen(logouturl,function() {
+		this.waitForSelector('h1#headingText')
+		screenshot('8loggedout')
+	})
 
-	    	this.fillSelectors('form[name="f"]', {
-	    		'input[title="Pesquisa Google"]' : query
-	    	}, true);
-
-
-	    	casper.log('Searching...','info')
-	    	// casper.waitForSelector('div#foot', function() {
-	    	casper.waitForText('Pesquisas relacionadas', function() {
-	    		casper.log('Results page loaded','info')
-	    		screenshot('resultpage')
-	    	});
-	    });
+	casper.thenOpen('http://google.com/', function() {
+		this.waitForSelector('form[action="/search"]')
+		screenshot('9googlehome')
 	});
-
 }
+
 //////// THE VERY BEGINNIG //////////
 
 start_as_ms = new Date();
@@ -186,11 +157,8 @@ path = parent_dir + '/' + start_as_str + '/'
 fs.makeDirectory(path);
 
 login('alegomes@gmail.com','!2#Pipoc@')
-// const env = require('system').env;
-// const google_email = env.MY_GOOGLE_EMAIL;
-// const google_passwd = env.MY_GOOGLE_PASSWD;
-
-// searchFor('arroz')
+searchFor('arroz')
+logout()
 
 
 casper.run();
