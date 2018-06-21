@@ -56,56 +56,82 @@ var login = function(email, pass) {
 
 	casper.start(loginurl, function() {
 		casper.log('Login page loading...','info')
-		screenshot('loginpage')
+		screenshot('1loginpage')
 
 		casper.waitForSelector('form#gaia_loginform', function() {
 			casper.log('Login page loaded','info')
 			casper.log('Filling email','info')
-			this.fill('form#gaia_loginform', {
-				'Email':  email
-			}, false);
-			screenshot('emailfilled')
-			
-			this.click('input#next');
-			casper.log('Password page loading','info')
-		
-			casper.waitForSelector('form#gaia_loginform #Passwd', function() { 
-				screenshot('passwordpage')
-				casper.log('Filling password','info')
-
-				this.fill('form#gaia_loginform', {
-					'Passwd':  pass
-				}, false);
-				screenshot('passwordfilled')
-
-				casper.log('Signing in...','info')
-				this.click('input#signIn');
-			});
 		});
 	});
 
+	casper.then(function() {
+		this.fill('form#gaia_loginform', { 'Email':  email }, false);
+		screenshot('2emailfilled');
+	});
+
+	casper.then(function() {
+		this.click('input#next');
+			casper.log('Password page loading','info')
+			casper.waitForSelector('form#gaia_loginform #Passwd', function() { 
+				this.log('Password page loaded', 'debug');
+				screenshot('3passwordpage');
+			});
+	})
+
+	casper.then(function() {
+		this.log('Filling password','info')
+		this.fill('form#gaia_loginform', { 'Passwd':  pass }, false);
+		screenshot('4passwordfilled')
+	})
+
+	casper.then(function() {
+		this.log('Signing in...','info')
+		this.click('input#signIn');
+	})
+
+	casper.then(function() {
+		screenshot('5loggedin');
+	})
+
+	casper.thenOpen('http://google.com/', function() {
+		this.waitForSelector('form[action="/search"]')
+		screenshot('6googlehome1')
+	});
+
+	casper.then(function() {
+		this.fillSelectors('form[name="f"]', {
+			'input[title="Pesquisa Google"]' : 'arroz'
+		}, true);
+	})
+
+	casper.then(function() {
+		casper.waitForText('Pesquisas relacionadas', function() {
+    		casper.log('Results page loaded','info')
+    		screenshot('7resultpage')
+    	});
+	})
 
 	// TESTE
-	casper.thenOpen('http://google.com', function() {
+	// casper.thenOpen('http://google.com', function() {
 		
-		casper.log('Loading Google Search...', 'info');
-	    casper.waitForSelector('form[action="/search"]', function() {
-	    	screenshot('googlehome');
-	    	casper.log('Google page loaded','info');
+	// 	casper.log('Loading Google Search...', 'info');
+	//     casper.waitForSelector('form[action="/search"]', function() {
+	//     	screenshot('googlehome2');
+	//     	casper.log('Google page loaded','info');
 
-	    	this.fillSelectors('form[name="f"]', {
-	    		'input[title="Pesquisa Google"]' : query
-	    	}, true);
+	//     	this.fillSelectors('form[name="f"]', {
+	//     		'input[title="Pesquisa Google"]' : 'arroz'
+	//     	}, true);
 
 
-	    	casper.log('Searching...','info')
-	    	// casper.waitForSelector('div#foot', function() {
-	    	casper.waitForText('Pesquisas relacionadas', function() {
-	    		casper.log('Results page loaded','info')
-	    		screenshot('resultpage')
-	    	});
-	    });
-	});
+	//     	casper.log('Searching...','info')
+	//     	// casper.waitForSelector('div#foot', function() {
+	//     	casper.waitForText('Pesquisas relacionadas', function() {
+	//     		casper.log('Results page loaded','info')
+	//     		screenshot('resultpage')
+	//     	});
+	//     });
+	// });
 
 
 }
