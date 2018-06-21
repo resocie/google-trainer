@@ -10,12 +10,10 @@ var sprintf = require('sprintf-js').sprintf
 
 var getFilename = function(prefix, extension) {
 	casper.log('[getFilename] Building filename with prefix="'+prefix+'" and extension="'+extension+'"','debug')
-	var path = './' 
-	var query = "arroz"
 
     var now = dateFormat(new Date(), 'yyyymmddHHMM');
     // var filename = path+'coleta.' + query + '.'+ start_as_str + '.' + prefix + '.' + now + '.' + extension
-    var filename = prefix+".google-search." + extension 
+    var filename = path + "/" + prefix + ".google-search." + now + "." + extension 
 
     casper.log('[getFilename] Filename = ' + filename,'debug')
     return filename;
@@ -32,10 +30,10 @@ var saveHtmlPage = function(qualifier) {
     // });
 }
 
-var capturePage = function() {
-    casper.log('[capturePage] start');
-    casper.capture(getFilename('capture','png'));
-    casper.log('[capturePage] end');
+var screenshot = function(qualifier) {
+    casper.log('[screenshot] start','debug');
+    casper.capture(getFilename('screenshot-'+qualifier,'png'));
+    casper.log('[screenshot] end','debug');
 }
 
 var logWaitForTimeout = function(timeout, details) {
@@ -47,43 +45,67 @@ var logWaitForTimeout = function(timeout, details) {
     }
 
     saveHtmlPage('timeout');
-    capturePage();
+    screenshot();
 
     casper.exit();
 
 }
 
-var login = function(user, pass) {
+var login = function(email, pass) {
 	var loginurl = 'https://accounts.google.com/ServiceLogin?passive=1209600&continue=https%3A%2F%2Faccounts.google.com%2FManageAccount&followup=https%3A%2F%2Faccounts.google.com%2FManageAccount&flowName=GlifWebSignIn&flowEntry=ServiceLogin&nojavascript=1#identifier'
 
 	casper.start(loginurl, function() {
 		casper.log('Login page loading...','info')
-		this.capture('loginpage.png')
+		screenshot('loginpage')
 
 		casper.waitForSelector('form#gaia_loginform', function() {
 			casper.log('Login page loaded','info')
 			casper.log('Filling email','info')
 			this.fill('form#gaia_loginform', {
-				'Email':  'alegomes@gmail.com'
+				'Email':  email
 			}, false);
-			this.capture('emailfilled.png')
+			screenshot('emailfilled')
 			
 			this.click('input#next');
 			casper.log('Password page loading','info')
 		
 			casper.waitForSelector('form#gaia_loginform #Passwd', function() { 
-				this.capture('passwordpage.png')
+				screenshot('passwordpage')
 				casper.log('Filling password','info')
 
 				this.fill('form#gaia_loginform', {
-					'Passwd':  '!2#Pipoc@'
+					'Passwd':  pass
 				}, false);
-				this.capture('passwordfilled.png')
+				screenshot('passwordfilled')
 
 				casper.log('Signing in...','info')
 				this.click('input#signIn');
 			});
 		});
+	});
+}
+
+var searchFor = function(query) {
+
+	casper.thenOpen('http://google.com', function() {
+		
+		casper.log('Loading Google Search...', 'info');
+	    casper.waitForSelector('form[action="/search"]', function() {
+	    	screenshot('googlehome');
+	    	casper.log('Google page loaded','info');
+
+	    	this.fillSelectors('form[name="f"]', {
+	    		'input[title="Pesquisa Google"]' : query
+	    	}, true);
+
+
+	    	casper.log('Searching...','info')
+	    	// casper.waitForSelector('div#foot', function() {
+	    	casper.waitForText('Pesquisas relacionadas', function() {
+	    		casper.log('Results page loaded','info')
+	    		screenshot('resultpage')
+	    	});
+	    });
 	});
 
 }
@@ -104,33 +126,20 @@ var casper = require('casper').create({
 
 casper.on('waitFor.timeout', logWaitForTimeout);
 
-login()
+parent_dir = 'data'
+if( !fs.exists(parent_dir) ) {
+    fs.makeDirectory(parent_dir);
+}
+
+path = parent_dir + '/' + start_as_str + '/'
+fs.makeDirectory(path);
+
+login('alegomes@gmail.com','!2#Pipoc@')
 // const env = require('system').env;
 // const google_email = env.MY_GOOGLE_EMAIL;
 // const google_passwd = env.MY_GOOGLE_PASSWD;
 
-
-casper.thenOpen('http://google.com', function() {
-	
-	casper.log('Loading Google Search...', 'info');
-    casper.waitForSelector('form[action="/search"]', function() {
-    	this.capture('googlehome.png');
-    	casper.log('Google page loaded','info');
-
-    	this.fillSelectors('form[name="f"]', {
-    		'input[title="Pesquisa Google"]' : 'arroz'
-    	}, true);
-
-
-    	casper.log('Searching...','info')
-    	// casper.waitForSelector('div#foot', function() {
-    	casper.waitForText('Pesquisas relacionadas', function() {
-    		casper.log('Results page loaded','info')
-    		this.capture('resultpage.png')
-    	});
-    });
-});
-
+searchFor('arroz')
 
 
 casper.run();
