@@ -3,6 +3,11 @@ const fs = require('fs');
 var dateFormat = require('dateformat');
 var sprintf = require('sprintf-js').sprintf
 
+// const env = require('system').env;
+// const google_email = env.MY_GOOGLE_EMAIL;
+// const google_passwd = env.MY_GOOGLE_PASSWD;
+
+
 var getFilename = function(prefix, extension) {
 	casper.log('[getFilename] Building filename with prefix="'+prefix+'" and extension="'+extension+'"','debug')
 	var path = './' 
@@ -48,13 +53,49 @@ var logWaitForTimeout = function(timeout, details) {
 
 }
 
+var login = function(user, pass) {
+	var loginurl = 'https://accounts.google.com/ServiceLogin?passive=1209600&continue=https%3A%2F%2Faccounts.google.com%2FManageAccount&followup=https%3A%2F%2Faccounts.google.com%2FManageAccount&flowName=GlifWebSignIn&flowEntry=ServiceLogin&nojavascript=1#identifier'
+
+	casper.start(loginurl, function() {
+		casper.log('Login page loading...','info')
+		this.capture('loginpage.png')
+
+		casper.waitForSelector('form#gaia_loginform', function() {
+			casper.log('Login page loaded','info')
+			casper.log('Filling email','info')
+			this.fill('form#gaia_loginform', {
+				'Email':  'alegomes@gmail.com'
+			}, false);
+			this.capture('emailfilled.png')
+			
+			this.click('input#next');
+			casper.log('Password page loading','info')
+		
+			casper.waitForSelector('form#gaia_loginform #Passwd', function() { 
+				this.capture('passwordpage.png')
+				casper.log('Filling password','info')
+
+				this.fill('form#gaia_loginform', {
+					'Passwd':  '!2#Pipoc@'
+				}, false);
+				this.capture('passwordfilled.png')
+
+				casper.log('Signing in...','info')
+				this.click('input#signIn');
+			});
+		});
+	});
+
+}
+//////// THE VERY BEGINNIG //////////
+
+start_as_ms = new Date();
+start_as_str = dateFormat(start_as_ms, "yyyymmddHHMM");
+
 var casper = require('casper').create({
 	verbose: true,
 	logLevel: 'debug',
 	waitTimeout: 10000,
-	// clientScripts: ["libs/jquery.min.js"],
-	// userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_5)'
-	//' AppleWebKit/537.4 (KHTML, like Gecko) Chrome/22.0.1229.94 Safari/537.4'
 	viewportSize: {
         width: 1920,
         height: 1080
@@ -62,58 +103,12 @@ var casper = require('casper').create({
 });
 
 casper.on('waitFor.timeout', logWaitForTimeout);
-// casper.on('waitFor.timeout', function(d,a) { 
-// 	casper.echo("PAAAAUUUUU") ;
-// 	casper.capture('timeout.png');
-// 	// saveHtmlPage();
 
-// 	// casper.echo(casper.getHTML());
-
-// 	casper.log("[saveHtmlPage] Saving HTML...",'debug');
-//     var html = String(casper.getHTML()); // grab our HTML (http://casperjs.readthedocs.org/en/latest/modules/casper.html#gethtml)
-//     casper.log(html,'debug');
-//     // var filename = getFilename(target.replace(/[^A-z]/g, ''), 'html') ; // create a sanitized filename by removing all the non A-Z characters (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)
-//     var filename = getFilename('page', 'html');
-//     casper.log(filename,'debug');
-//     fs.write(filename, html, 'w'); // and save it to a file (https://docs.nodejitsu.com/articles/file-system/how-to-write-files-in-nodejs)
-//     casper.log("[saveHtmlPage] HTML saved at " + filename,'info');
-// });
-
+login()
 // const env = require('system').env;
 // const google_email = env.MY_GOOGLE_EMAIL;
 // const google_passwd = env.MY_GOOGLE_PASSWD;
 
-var loginurl = 'https://accounts.google.com/ServiceLogin?passive=1209600&continue=https%3A%2F%2Faccounts.google.com%2FManageAccount&followup=https%3A%2F%2Faccounts.google.com%2FManageAccount&flowName=GlifWebSignIn&flowEntry=ServiceLogin&nojavascript=1#identifier'
-
-casper.start(loginurl, function() {
-	casper.log('Login page loading...','info')
-	this.capture('loginpage.png')
-
-	casper.waitForSelector('form#gaia_loginform', function() {
-		casper.log('Login page loaded','info')
-		casper.log('Filling email','info')
-		this.fill('form#gaia_loginform', {
-			'Email':  'alegomes@gmail.com'
-		}, false);
-		this.capture('emailfilled.png')
-		
-		this.click('input#next');
-		casper.log('Password page loading','info')
-	
-		casper.waitForSelector('form#gaia_loginform #Passwd', function() { 
-			this.capture('passwordpage.png')
-			casper.log('Filling password','info')
-
-			this.fill('form#gaia_loginform', {
-				'Passwd':  '!2#Pipoc@'
-			}, false);
-			this.capture('passwordfilled.png')
-
-			casper.log('Signing in...','info')
-			this.click('input#signIn');
-		});
-	});
-});
 
 casper.thenOpen('http://google.com', function() {
 	
@@ -126,15 +121,6 @@ casper.thenOpen('http://google.com', function() {
     		'input[title="Pesquisa Google"]' : 'arroz'
     	}, true);
 
-    	saveHtmlPage('antesdoclick')
-    	// this.click('input[name="btnG"]');
-    	// this.click('input[value="Pesquisa Google"]')
-    	// this.clickLabel('Pesquisa Google');
-    	// form action="/search"
-    	this.wait(15000, function() {
-       	 	this.echo("I've waited for 15 second.");
-    	});
-    	saveHtmlPage('depoisdoclick')
 
     	casper.log('Searching...','info')
     	// casper.waitForSelector('div#foot', function() {
