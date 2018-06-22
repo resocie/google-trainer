@@ -14,7 +14,7 @@ var getFilename = function(prefix, extension) {
 
     var now = dateFormat(new Date(), 'yyyymmddHHMMss');
     // var filename = path+'coleta.' + query + '.'+ start_as_str + '.' + prefix + '.' + now + '.' + extension
-    var filename =  path + "/" + now + "." + prefix + '.' + extension 
+    var filename =  path + "/" + now + "." + alias + '.' + prefix + '.' + extension 
 
     casper.log('[getFilename] Filename = ' + filename,'debug')
     return filename;
@@ -57,7 +57,8 @@ var logToFile = function(e, origin) {
     //     message: "A message",
     //     date:    "a javascript Date instance"
     // }
-    var logfilename = path + 'training.'+ start_as_str + '.log';
+    // var logfilename = path + 'training.'+ start_as_str + '.log';
+    var logfilename = path + 'training.'+ timestamp + '.log';
 
     if ( typeof e === 'string' ) {
         e = {
@@ -74,16 +75,15 @@ var logToFile = function(e, origin) {
 
 var login = function(email, pass) {
 	var loginurl = 'https://accounts.google.com/ServiceLogin?passive=1209600&continue=https%3A%2F%2Faccounts.google.com%2FManageAccount&followup=https%3A%2F%2Faccounts.google.com%2FManageAccount&flowName=GlifWebSignIn&flowEntry=ServiceLogin&nojavascript=1#identifier'
-	var user = email.split('@')[0]
-	var qualifier = 'login.'+user
+	var qualifier = 'login.'+alias
 
 	casper.start(loginurl, function() {
-		casper.log('['+user+'] Login page loading...','info')
+		casper.log('['+alias+'] Login page loading...','info')
 		screenshot(qualifier+'.1loginpage')
 
 		casper.waitForSelector('form#gaia_loginform', function() {
-			casper.log('['+user+'] Login page loaded','info')
-			casper.log('['+user+'] Filling email','info')
+			casper.log('['+alias+'] Login page loaded','info')
+			casper.log('['+alias+'] Filling email','info')
 		});
 	});
 
@@ -94,21 +94,21 @@ var login = function(email, pass) {
 
 	casper.then(function() {
 		this.click('input#next');
-			casper.log('['+user+'] Password page loading','info')
+			casper.log('['+alias+'] Password page loading','info')
 			casper.waitForSelector('form#gaia_loginform #Passwd', function() { 
-				this.log('['+user+'] Password page loaded', 'debug');
+				this.log('['+alias+'] Password page loaded', 'debug');
 				screenshot(qualifier+'.3passwordpage');
 			});
 	})
 
 	casper.then(function() {
-		this.log('['+user+'] Filling password','info')
+		this.log('['+alias+'] Filling password','info')
 		this.fill('form#gaia_loginform', { 'Passwd':  pass }, false);
 		screenshot(qualifier+'.4passwordfilled')
 	})
 
 	casper.then(function() {
-		this.log('['+user+'] Signing in...','info')
+		this.log('['+alias+'] Signing in...','info')
 		this.click('input#signIn');
 	})
 
@@ -149,34 +149,31 @@ var searchFor = function(query) {
 }
 
 var visit = function(url) {
-	var user = email.split('@')[0]
 	casper.log('Visiting ' + url, 'info')
 	casper.thenOpen(url, function() {
-		screenshot('visit.'+user+'.'+url.split('//')[1].replace(/\./g,'').replace('/','|'))
+		screenshot('visit.'+alias+'.'+url.split('//')[1].replace(/\./g,'').replace('/','|'))
 	})
 	casper.log(url + ' visited.')
 }
 
 var logout = function(email) {
-	var user = email.split('@')[0]
-
 	logouturl = 'https://accounts.google.com/Logout';
 	casper.log('Signing out','info')
 	casper.thenOpen(logouturl,function() {
 		this.waitForSelector('h1#headingText')
-		screenshot('logout.'+user+'.8loggedout')
+		screenshot('logout.'+alias+'.8loggedout')
 	})
 
 	casper.thenOpen('http://google.com/', function() {
 		this.waitForSelector('form[action="/search"]')
-		screenshot('logout.'+user+'.9googlehome')
+		screenshot('logout.'+alias+'.9googlehome')
 	});
 }
 
 //////// THE VERY BEGINNIG //////////
 
-start_as_ms = new Date();
-start_as_str = dateFormat(start_as_ms, "yyyymmddHHMM");
+// start_as_ms = new Date();
+// start_as_str = dateFormat(start_as_ms, "yyyymmddHHMM");
 
 var casper = require('casper').create({
 	verbose: true,
@@ -193,23 +190,29 @@ casper.on('waitFor.timeout', logWaitForTimeout);
 casper.on('log', logToFile, 'local');
 
 // Args
-if (! casper.cli.has(3)) {
+if (! casper.cli.has(5)) {
     casper.echo('[ERROR] Argument missing. Usage:');
     casper.echo('');
-    casper.echo('   $ casperjs collect.js <email> <password> <queries> <urls>');
+    casper.echo('   $ casperjs collect.js <timestamp> <email> <password> <queries> <urls>');
     casper.echo('');
     casper.exit();
 }
 
-var email = casper.cli.get(0);
-var pass = casper.cli.get(1);
-var queries = casper.cli.get(2).split(',');
-var urls = casper.cli.get(3).split(',');
+var timestamp = casper.cli.get(0);
+var email = casper.cli.get(1);
+var pass = casper.cli.get(2);
+var alias = casper.cli.get(3);
+var queries = casper.cli.get(4).split(',');
+var urls = casper.cli.get(5).split(',');
 
+casper.log('timestamp='+timestamp,'debug')
 casper.log('email='+email,'debug')
 casper.log('pass='+pass,'debug')
+casper.log('alias='+alias,'debug')
 casper.log('queries='+queries,'debug')
 casper.log('urls='+urls,'urls')
+
+
 
 // Working dirs
 parent_dir = 'output'
@@ -217,7 +220,8 @@ if( !fs.exists(parent_dir) ) {
     fs.makeDirectory(parent_dir);
 }
 
-path = parent_dir + '/' + start_as_str + '/'
+// path = parent_dir + '/' + start_as_str + '/'
+path = parent_dir + '/' + timestamp + '/'
 fs.makeDirectory(path);
 
 // Data
