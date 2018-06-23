@@ -24,14 +24,14 @@ var saveHtmlPage = function(qualifier) {
     casper.log("[saveHtmlPage] Saving HTML...",'debug');
     var html = String(casper.getHTML()); // grab our HTML (http://casperjs.readthedocs.org/en/latest/modules/casper.html#gethtml)
     // var filename = getFilename(target.replace(/[^A-z]/g, ''), 'html') ; // create a sanitized filename by removing all the non A-Z characters (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)
-    var filename = getFilename('page-'+qualifier, 'html');
+    var filename = getFilename(qualifier+'-page', 'html');
     fs.write(filename, html, 'w'); // and save it to a file (https://docs.nodejitsu.com/articles/file-system/how-to-write-files-in-nodejs)
     casper.log("[saveHtmlPage] HTML saved at " + filename,'info');
 }
 
 var screenshot = function(qualifier) {
     casper.log('[screenshot] start','debug');
-    casper.capture(getFilename('screenshot-'+qualifier,'png'));
+    casper.capture(getFilename(qualifier+'-screenshot','png'));
     casper.log('[screenshot] end','debug');
 }
 
@@ -151,7 +151,7 @@ var searchFor = function(query) {
 var visit = function(url) {
 	casper.log('Visiting ' + url, 'info')
 	casper.thenOpen(url, function() {
-		screenshot('visit.'+alias+'.'+url.split('//')[1].replace(/\./g,'').replace('/','|'))
+		screenshot(alias+'.visit.'+'.'+url.split('//')[1].replace(/\./g,'').replace('/','|'))
 	})
 	casper.log(url + ' visited.')
 }
@@ -179,6 +179,7 @@ var casper = require('casper').create({
 	verbose: true,
 	logLevel: 'debug',
 	waitTimeout: 10000,
+	onWaitTimeout: logWaitForTimeout,
 	viewportSize: {
         width: 1920,
         height: 1080

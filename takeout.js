@@ -1,0 +1,272 @@
+const fs = require("fs");
+// var util = require('util');
+var dateFormat = require('dateformat');
+// var sprintf = require('sprintf-js').sprintf
+// var csv = require("csv");
+
+// const env = require('system').env;
+// const google_email = env.MY_GOOGLE_EMAIL;
+// const google_passwd = env.MY_GOOGLE_PASSWD;
+
+
+var getFilename = function(prefix, extension) {
+	casper.log('[getFilename] Building filename with prefix="'+prefix+'" and extension="'+extension+'"','debug')
+
+    var now = dateFormat(new Date(), 'yyyymmddHHMMss');
+    // var filename = path+'coleta.' + query + '.'+ start_as_str + '.' + prefix + '.' + now + '.' + extension
+    var filename =  path + "/" + now + "." + alias + '.' + prefix + '.' + extension 
+
+    casper.log('[getFilename] Filename = ' + filename,'debug')
+    return filename;
+}
+
+var saveHtmlPage = function(qualifier) {
+    casper.log("[saveHtmlPage] Saving HTML...",'debug');
+    var html = String(casper.getHTML()); // grab our HTML (http://casperjs.readthedocs.org/en/latest/modules/casper.html#gethtml)
+    // var filename = getFilename(target.replace(/[^A-z]/g, ''), 'html') ; // create a sanitized filename by removing all the non A-Z characters (https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions)
+    var filename = getFilename('page-'+qualifier, 'html');
+    fs.write(filename, html, 'w'); // and save it to a file (https://docs.nodejitsu.com/articles/file-system/how-to-write-files-in-nodejs)
+    casper.log("[saveHtmlPage] HTML saved at " + filename,'info');
+}
+
+var screenshot = function(qualifier) {
+    casper.log('[screenshot] start','debug');
+    casper.capture(getFilename('screenshot-'+qualifier,'png'));
+    casper.log('[screenshot] end','debug');
+}
+
+// var logWaitForTimeout = function(timeout, details) {
+//     casper.echo(sprintf('Waitfor timeout. timeout=%d details=%s', timeout, details),'error');
+//     casper.log(sprintf('Waitfor timeout. timeout=%d details=%s', timeout, details),'error');
+    
+//     for(p in details) {
+//         casper.log(sprintf('  %s=%s',p,details[p]) , 'error')
+//     }
+
+//     saveHtmlPage('timeout');
+//     screenshot();
+
+//     casper.exit();
+
+// }
+
+// var logToFile = function(e, origin) {
+//     // {
+//     //     level:   "debug",
+//     //     space:   "phantom",
+//     //     message: "A message",
+//     //     date:    "a javascript Date instance"
+//     // }
+//     // var logfilename = path + 'training.'+ start_as_str + '.log';
+//     var logfilename = path + 'training.'+ timestamp + '.log';
+
+//     if ( typeof e === 'string' ) {
+//         e = {
+//             'date' : dateFormat(new Date(), "yyyymmddHHMM"),
+//             'level' : 'ERROR',
+//             'space' : origin,
+//             'message' : e
+//         }
+//     }
+
+//     var row = sprintf("%(date)s [%(level)s] %(space)s - %(message)s\n",e);
+//     fs.write(logfilename, row, 'a');
+// }
+
+var login = function(email, pass) {
+	var loginurl = 'https://accounts.google.com/ServiceLogin?passive=1209600&continue=https%3A%2F%2Faccounts.google.com%2FManageAccount&followup=https%3A%2F%2Faccounts.google.com%2FManageAccount&flowName=GlifWebSignIn&flowEntry=ServiceLogin&nojavascript=1#identifier'
+	var qualifier = 'login.'+alias
+
+	casper.start(loginurl, function() {
+		casper.log('['+alias+'] Login page loading...','info')
+		screenshot(qualifier+'.1loginpage')
+
+		casper.waitForSelector('form#gaia_loginform', function() {
+			casper.log('['+alias+'] Login page loaded','info')
+			casper.log('['+alias+'] Filling email','info')
+		});
+	});
+
+	casper.then(function() {
+		this.fill('form#gaia_loginform', { 'Email':  email }, false);
+		screenshot(qualifier+'.2emailfilled');
+	});
+
+	casper.then(function() {
+		this.click('input#next');
+			casper.log('['+alias+'] Password page loading','info')
+			casper.waitForSelector('form#gaia_loginform #Passwd', function() { 
+				this.log('['+alias+'] Password page loaded', 'debug');
+				screenshot(qualifier+'.3passwordpage');
+			});
+	})
+
+	casper.then(function() {
+		this.log('['+alias+'] Filling password','info')
+		this.fill('form#gaia_loginform', { 'Passwd':  pass }, false);
+		screenshot(qualifier+'.4passwordfilled')
+	})
+
+	casper.then(function() {
+		this.log('['+alias+'] Signing in...','info')
+		this.click('input#signIn');
+	})
+
+	casper.then(function() {
+		screenshot(qualifier+'.5loggedin');
+	})
+
+}
+
+// var searchFor = function(query) {
+
+// 	casper.thenOpen('http://google.com/', function() {
+// 		casper.log('Searching for "' + query + '"', 'info')
+// 		this.waitForSelector('form[action="/search"]')
+// 		screenshot('searchFor.'+query+'.googlehome')
+// 	});
+
+// 	casper.then(function() {
+// 		this.fillSelectors('form[name="f"]', {
+// 			'input[title="Pesquisa Google"]' : query
+// 		}, true);
+// 	})
+
+// 	// casper.then(function() {
+// 	// 	this.wait(20000, function() {
+// 	// 		screenshot('searchFor.'+query+'.afterwait')
+// 	// 	})
+// 	// })
+
+// 	casper.then(function() {
+// 		casper.waitForText('Aproximadamente', function() {
+//     		casper.log('Results for "' + query +'"','info')
+//     		screenshot('searchFor.'+query+'.resultpage.')
+//     		saveHtmlPage('searchFor.'+query+'.resultpage.')
+//     	});
+// 	})
+
+// }
+
+var takeout = function() {
+	// var url = 'https://myactivity.google.com/myactivity'
+	var url = 'https://takeout.google.com/settings/takeout?authuser=1'
+
+	casper.log('Getting '+email+'\'s data...')
+	casper.thenOpen(url, function() {
+		this.waitForText('Selecionar dados a serem incluídos')
+		screenshot('takeout-select')
+		saveHtmlPage('takeout-select')
+	});
+
+	casper.then(function() {
+		this.clickLabel('Próxima','span')
+	});
+
+	casper.then(function() {
+		this.wait(15000)
+	})
+
+	casper.then(function() {
+		screenshot('takeout-personalize')
+	})
+
+	casper.then(function(){
+		this.waitForText('produtos selecionados')
+	})
+
+	casper.then(function() {
+		this.clickLabel('Criar arquivo','span')
+	});	
+
+	casper.then(function(){
+		this.waitForText('Estamos preparando seu arquivo.', function() {
+			casper.log('Arquivo de dados encomendado', 'info')
+		})
+	})
+
+	casper.then(function() {
+		screenshot('takeout-done')
+	})
+
+}
+
+// var visit = function(url) {
+// 	casper.log('Visiting ' + url, 'info')
+// 	casper.thenOpen(url, function() {
+// 		screenshot('visit.'+alias+'.'+url.split('//')[1].replace(/\./g,'').replace('/','|'))
+// 	})
+// 	casper.log(url + ' visited.')
+// }
+
+var logout = function(email) {
+	logouturl = 'https://accounts.google.com/Logout';
+	casper.log('Signing out','info')
+	casper.thenOpen(logouturl,function() {
+		this.waitForSelector('h1#headingText')
+		screenshot('logout.'+alias+'.8loggedout')
+	})
+
+	casper.thenOpen('http://google.com/', function() {
+		this.waitForSelector('form[action="/search"]')
+		screenshot('logout.'+alias+'.9googlehome')
+	});
+}
+
+//////// THE VERY BEGINNIG //////////
+
+// start_as_ms = new Date();
+// start_as_str = dateFormat(start_as_ms, "yyyymmddHHMM");
+
+var casper = require('casper').create({
+	verbose: true,
+	logLevel: 'debug',
+	waitTimeout: 10000,
+	viewportSize: {
+        width: 1920,
+        height: 1080
+    }
+});
+
+// Events
+// casper.on('waitFor.timeout', logWaitForTimeout);
+// casper.on('log', logToFile, 'local');
+
+// Args
+if (! casper.cli.has(3)) {
+    casper.echo('[ERROR] Argument missing. Usage:');
+    casper.echo('');
+    casper.echo('   $ casperjs collect.js <timestamp> <email> <password> <alias>');
+    casper.echo('');
+    casper.exit();
+}
+
+var timestamp = casper.cli.get(0);
+var email = casper.cli.get(1);
+var pass = casper.cli.get(2);
+var alias = casper.cli.get(3);
+
+
+casper.log('timestamp='+timestamp,'debug')
+casper.log('email='+email,'debug')
+casper.log('pass='+pass,'debug')
+casper.log('alias='+alias,'debug')
+
+
+
+// Working dirs
+parent_dir = 'output'
+if( !fs.exists(parent_dir) ) {
+    fs.makeDirectory(parent_dir);
+}
+
+path = parent_dir + '/' + timestamp + '/'
+fs.makeDirectory(path);
+
+
+login(email, pass)
+takeout()
+logout(email)
+
+casper.run();
+
