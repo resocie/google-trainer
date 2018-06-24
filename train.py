@@ -50,7 +50,7 @@ for row in users_reader:
 	# rc = p.returncode
 
 	p1 = Popen(["./casperjs", "train.js", folder, email, passwd, alias, queries, urls], stdout=PIPE)
-	p2 = Popen(["tee", "output/reinamento.%s.output.txt" % (now)], stdin=p1.stdout, stdout=PIPE)
+	p2 = Popen(["tee", "output/treinamento.%s.output.txt" % (now)], stdin=p1.stdout, stdout=PIPE)
 	p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
 	output = p2.communicate()[0]
 

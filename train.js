@@ -151,7 +151,7 @@ var searchFor = function(query) {
 var visit = function(url) {
 	casper.log('Visiting ' + url, 'info')
 	casper.thenOpen(url, function() {
-		screenshot(alias+'.visit.'+'.'+url.split('//')[1].replace(/\./g,'').replace('/','|'))
+		screenshot('visit.'+url.split('//')[1].replace(/\./g,'').replace(/\//g,'|'))
 	})
 	casper.log(url + ' visited.')
 }
