@@ -1,4 +1,5 @@
 import csv
+import os
 # from subprocess import call
 from subprocess import Popen, PIPE
 import datetime
@@ -11,7 +12,7 @@ users_filename = 'input/users-prod.csv'
 
 users_reader = csv.reader(open(users_filename))
 for row in users_reader:
-	print(row)
+	print('row=%s' % row)
 	email = row[0]
 	passwd = row[1]
 	alias = row[2]
@@ -39,8 +40,12 @@ for row in users_reader:
 		else:
 			urls = url
 
-	print(queries)
-	print(urls)
+
+	print("----------------------------------")
+	print("[%s] Starting %s's training" % (now,alias))
+
+	print('queries='+queries)
+	print('urls='+urls)
 
 	# call(["./casperjs", "train.js", folder, email, passwd, alias, queries, urls, "| tee -a", "output/treinamento.$(date +%Y%m%d%H%M).output.txt"])
 
@@ -50,9 +55,12 @@ for row in users_reader:
 	# rc = p.returncode
 
 	p1 = Popen(["./casperjs", "train.js", folder, email, passwd, alias, queries, urls], stdout=PIPE)
-	p2 = Popen(["tee", "output/treinamento.%s.output.txt" % (now)], stdin=p1.stdout, stdout=PIPE)
+	p2 = Popen(["tee", "output/%s-treinamento.%s.output.txt" % (now,alias)], stdin=p1.stdout, stdout=PIPE)
 	p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
 	output = p2.communicate()[0]
+
+	# os.system("cd output; zip %s-training.zip %s-training/*; cd .." % (now,now))
+	print("[%s] Finishing %s's training" % (now,alias))
 
 	# outfile = open("output/%s/treinamento.%s.%s.output.txt" % (folder,alias,now))
 	# outfile.write(output)

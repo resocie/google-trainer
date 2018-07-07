@@ -1,12 +1,6 @@
 const fs = require("fs");
-// var util = require('util');
 var dateFormat = require('dateformat');
-// var sprintf = require('sprintf-js').sprintf
-// var csv = require("csv");
 
-// const env = require('system').env;
-// const google_email = env.MY_GOOGLE_EMAIL;
-// const google_passwd = env.MY_GOOGLE_PASSWD;
 
 
 var getFilename = function(prefix, extension) {
@@ -34,44 +28,6 @@ var screenshot = function(qualifier) {
     casper.capture(getFilename('screenshot-'+qualifier,'png'));
     casper.log('[screenshot] end','debug');
 }
-
-// var logWaitForTimeout = function(timeout, details) {
-//     casper.echo(sprintf('Waitfor timeout. timeout=%d details=%s', timeout, details),'error');
-//     casper.log(sprintf('Waitfor timeout. timeout=%d details=%s', timeout, details),'error');
-    
-//     for(p in details) {
-//         casper.log(sprintf('  %s=%s',p,details[p]) , 'error')
-//     }
-
-//     saveHtmlPage('timeout');
-//     screenshot();
-
-//     casper.exit();
-
-// }
-
-// var logToFile = function(e, origin) {
-//     // {
-//     //     level:   "debug",
-//     //     space:   "phantom",
-//     //     message: "A message",
-//     //     date:    "a javascript Date instance"
-//     // }
-//     // var logfilename = path + 'training.'+ start_as_str + '.log';
-//     var logfilename = path + 'training.'+ timestamp + '.log';
-
-//     if ( typeof e === 'string' ) {
-//         e = {
-//             'date' : dateFormat(new Date(), "yyyymmddHHMM"),
-//             'level' : 'ERROR',
-//             'space' : origin,
-//             'message' : e
-//         }
-//     }
-
-//     var row = sprintf("%(date)s [%(level)s] %(space)s - %(message)s\n",e);
-//     fs.write(logfilename, row, 'a');
-// }
 
 var login = function(email, pass) {
 	var loginurl = 'https://accounts.google.com/ServiceLogin?passive=1209600&continue=https%3A%2F%2Faccounts.google.com%2FManageAccount&followup=https%3A%2F%2Faccounts.google.com%2FManageAccount&flowName=GlifWebSignIn&flowEntry=ServiceLogin&nojavascript=1#identifier'
@@ -118,35 +74,6 @@ var login = function(email, pass) {
 
 }
 
-// var searchFor = function(query) {
-
-// 	casper.thenOpen('http://google.com/', function() {
-// 		casper.log('Searching for "' + query + '"', 'info')
-// 		this.waitForSelector('form[action="/search"]')
-// 		screenshot('searchFor.'+query+'.googlehome')
-// 	});
-
-// 	casper.then(function() {
-// 		this.fillSelectors('form[name="f"]', {
-// 			'input[title="Pesquisa Google"]' : query
-// 		}, true);
-// 	})
-
-// 	// casper.then(function() {
-// 	// 	this.wait(20000, function() {
-// 	// 		screenshot('searchFor.'+query+'.afterwait')
-// 	// 	})
-// 	// })
-
-// 	casper.then(function() {
-// 		casper.waitForText('Aproximadamente', function() {
-//     		casper.log('Results for "' + query +'"','info')
-//     		screenshot('searchFor.'+query+'.resultpage.')
-//     		saveHtmlPage('searchFor.'+query+'.resultpage.')
-//     	});
-// 	})
-
-// }
 
 var takeout = function() {
 	// var url = 'https://myactivity.google.com/myactivity'
@@ -179,6 +106,12 @@ var takeout = function() {
 		this.clickLabel('Criar arquivo','span')
 	});	
 
+	casper.then(function() {
+		this.wait(10000)
+		casper.log('Arquivo de dados solicitado. Será que o Google vai deixar?', 'info')
+		screenshot('takeout-tryingtorequest')
+	});
+
 	casper.then(function(){
 		this.waitForText('Estamos preparando seu arquivo.', function() {
 			casper.log('Arquivo de dados encomendado', 'info')
@@ -186,18 +119,10 @@ var takeout = function() {
 	})
 
 	casper.then(function() {
-		screenshot('takeout-done')
+		screenshot('takeout-requestsuccessful')
 	})
 
 }
-
-// var visit = function(url) {
-// 	casper.log('Visiting ' + url, 'info')
-// 	casper.thenOpen(url, function() {
-// 		screenshot('visit.'+alias+'.'+url.split('//')[1].replace(/\./g,'').replace('/','|'))
-// 	})
-// 	casper.log(url + ' visited.')
-// }
 
 var logout = function(email) {
 	logouturl = 'https://accounts.google.com/Logout';

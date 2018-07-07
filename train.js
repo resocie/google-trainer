@@ -29,9 +29,18 @@ var saveHtmlPage = function(qualifier) {
     casper.log("[saveHtmlPage] HTML saved at " + filename,'info');
 }
 
-var screenshot = function(qualifier) {
+var screenshot = function(qualifier, visible) {
     casper.log('[screenshot] start','debug');
-    casper.capture(getFilename(qualifier+'-screenshot','png'));
+    if(visible) {
+    	casper.capture(getFilename(qualifier+'-screenshot','png'), {
+    		top: 0,
+	        left: 0,
+	        width: 1920,
+	        height: 1080
+    	});
+    } else {
+    	casper.capture(getFilename(qualifier+'-screenshot','png'));
+    }
     casper.log('[screenshot] end','debug');
 }
 
@@ -75,11 +84,11 @@ var logToFile = function(e, origin) {
 
 var login = function(email, pass) {
 	var loginurl = 'https://accounts.google.com/ServiceLogin?passive=1209600&continue=https%3A%2F%2Faccounts.google.com%2FManageAccount&followup=https%3A%2F%2Faccounts.google.com%2FManageAccount&flowName=GlifWebSignIn&flowEntry=ServiceLogin&nojavascript=1#identifier'
-	var qualifier = 'login.'+alias
+	var qualifier = 'login'
 
 	casper.start(loginurl, function() {
 		casper.log('['+alias+'] Login page loading...','info')
-		screenshot(qualifier+'.1loginpage')
+		screenshot(qualifier+'.1loginpage',false)
 
 		casper.waitForSelector('form#gaia_loginform', function() {
 			casper.log('['+alias+'] Login page loaded','info')
@@ -89,7 +98,7 @@ var login = function(email, pass) {
 
 	casper.then(function() {
 		this.fill('form#gaia_loginform', { 'Email':  email }, false);
-		screenshot(qualifier+'.2emailfilled');
+		screenshot(qualifier+'.2emailfilled',false);
 	});
 
 	casper.then(function() {
@@ -97,14 +106,14 @@ var login = function(email, pass) {
 			casper.log('['+alias+'] Password page loading','info')
 			casper.waitForSelector('form#gaia_loginform #Passwd', function() { 
 				this.log('['+alias+'] Password page loaded', 'debug');
-				screenshot(qualifier+'.3passwordpage');
+				screenshot(qualifier+'.3passwordpage',false);
 			});
 	})
 
 	casper.then(function() {
 		this.log('['+alias+'] Filling password','info')
 		this.fill('form#gaia_loginform', { 'Passwd':  pass }, false);
-		screenshot(qualifier+'.4passwordfilled')
+		screenshot(qualifier+'.4passwordfilled',false)
 	})
 
 	casper.then(function() {
@@ -113,7 +122,7 @@ var login = function(email, pass) {
 	})
 
 	casper.then(function() {
-		screenshot(qualifier+'.5loggedin');
+		screenshot(qualifier+'.5loggedin',false);
 	})
 
 }
@@ -123,7 +132,7 @@ var searchFor = function(query) {
 	casper.thenOpen('http://google.com/', function() {
 		casper.log('Searching for "' + query + '"', 'info')
 		this.waitForSelector('form[action="/search"]')
-		screenshot('searchFor.'+query+'.googlehome')
+		screenshot('searchFor.'+query+'.googlehome',false)
 	});
 
 	casper.then(function() {
@@ -141,8 +150,8 @@ var searchFor = function(query) {
 	casper.then(function() {
 		casper.waitForText('Aproximadamente', function() {
     		casper.log('Results for "' + query +'"','info')
-    		screenshot('searchFor.'+query+'.resultpage.')
-    		saveHtmlPage('searchFor.'+query+'.resultpage.')
+    		screenshot('searchFor.'+query+'.resultpage.',false)
+    		saveHtmlPage('searchFor.'+query+'.resultpage.',false)
     	});
 	})
 
@@ -151,7 +160,7 @@ var searchFor = function(query) {
 var visit = function(url) {
 	casper.log('Visiting ' + url, 'info')
 	casper.thenOpen(url, function() {
-		screenshot('visit.'+url.split('//')[1].replace(/\./g,'').replace(/\//g,'|'))
+		screenshot('visit.'+url.split('//')[1].replace(/\./g,'').replace(/\//g,'|'), true)
 	})
 	casper.log(url + ' visited.')
 }
@@ -161,12 +170,12 @@ var logout = function(email) {
 	casper.log('Signing out','info')
 	casper.thenOpen(logouturl,function() {
 		this.waitForSelector('h1#headingText')
-		screenshot('logout.'+alias+'.8loggedout')
+		screenshot('logout.'+alias+'.8loggedout',false)
 	})
 
 	casper.thenOpen('http://google.com/', function() {
 		this.waitForSelector('form[action="/search"]')
-		screenshot('logout.'+alias+'.9googlehome')
+		screenshot('logout.'+alias+'.9googlehome',false)
 	});
 }
 
@@ -185,12 +194,14 @@ var casper = require('casper').create({
         height: 1080
     }
 });
+casper.log('Creating casper object created', 'debug')
 
 // Events
 casper.on('waitFor.timeout', logWaitForTimeout);
 casper.on('log', logToFile, 'local');
 
 // Args
+casper.log('Checking arguments', 'debug')
 if (! casper.cli.has(5)) {
     casper.echo('[ERROR] Argument missing. Usage:');
     casper.echo('');
@@ -214,8 +225,8 @@ casper.log('queries='+queries,'debug')
 casper.log('urls='+urls,'urls')
 
 
-
 // Working dirs
+casper.log('Creating working dir', 'debug')
 parent_dir = 'output'
 if( !fs.exists(parent_dir) ) {
     fs.makeDirectory(parent_dir);
@@ -225,230 +236,12 @@ if( !fs.exists(parent_dir) ) {
 path = parent_dir + '/' + timestamp + '/'
 fs.makeDirectory(path);
 
-// Data
-var profiles = [
-	// {
-	// 	'email' : 'resocie.direita@gmail.com',
-	// 	'pass' : 'Tarrow2016',
-	// 	'queries' : [
-	// 		'imposto zero',
-	// 		'direito armas',
-	// 		'pena de morte',
-	// 		'ideologia de genero',
-	// 		'escola sem partido',
-	// 		'intervencao militar',
-	// 		'marxismo cultural',
-	// 		'direito a vida',
-	// 		'reducao maioridade',
-	// 		'prisao perpetua',
-	// 		'esquerdopatas',
-	// 		'petralhas',
-	// 		'estado minimo',
-	// 		'reducao impostos',
-	// 		'ditadura venezuela',
-	// 		'ditadura cuba',
-	// 		'feminazi',
-	// 		'lula ladrao',
-	// 		'privatiza tudo',
-	// 		'liberdade economica'],
-	// 	'urls' : [
-	// 		'http://www.facebook.com/Danilo.Gentili.Oficial/',
-	// 		'http://www.tvrevolta.com/',
-	// 		'http://marcosdoval.com.br/',
-	// 		'http://www.contracorrupcao.org/',
-	// 		'http://www.facebook.com/rachelsheherazadejornalista/',
-	// 		'http://www.administradores.com.br/',
-	// 		'https://mbl.org.br/',
-	// 		'http://www.facebook.com/Partido-Anti-PT-1510625462536589/',
-	// 		'https://vemprarua.net/',
-	// 		'http://canaldootario.com.br/',
-	// 		'http://www.folhapolitica.org/',
-	// 		'http://www.infomoney.com.br/',
-	// 		'http://familiaalegriacanaverde.blogspot.com/',
-	// 		'http://www.facebook.com/admRachelSheherazade/',
-	// 		'http://coroneltelhada.com.br/',
-	// 		'https://www.implicante.org/',
-	// 		'https://www.empiricus.com.br/',
-	// 		'http://www.maconsbr.com.br/',
-	// 		'http://queromedefender.wixsite.com/queromedefender',
-	// 		'http://www.endireitabrasil.com.br/',
-	// 		'http://www.socialistadeiphone.com/',
-	// 		'https://www.oantagonista.com/',
-	// 		'http://orgulhohetero.blog.br/',
-	// 		'http://www.olavodecarvalho.org/',
-	// 		'http://www3.redetv.uol.com.br/blog/reinaldo/',
-	// 		'http://occalertabrasil.blogspot.com/',
-	// 		'https://republicadecuritibaonline.com/',
-	// 		'http://orgulhohetero.blog.br/',
-	// 		'https://www.mises.org.br/',
-	// 		'http://lobao.com.br/',
-	// 		'http://www.ilisp.org/',
-	// 		'http://somosodireita.blogspot.com/',
-	// 		'https://www.internautascristaos.com/',
-	// 		'https://sarawinter.com.br/',
-	// 		'http://tradutoresdedireita.org/',]
-	// },
-	// {
-	// 	'email' : 'resocie.esquerda@gmail.com',
-	// 	'pass' : 'Tarrow2016',
-	// 	'queries' : [
-	// 		'lula livre',
-	// 		'reforma agraria',
-	// 		'direito a moradia',
-	// 		'passe livre',
-	// 		'diretas ja',
-	// 		'fora temer',
-	// 		'volta dilma',
-	// 		'coracao valente',
-	// 		'quem matou marielle franco?',
-	// 		'legalizacao do aborto',
-	// 		'socialismo',
-	// 		'feminismo',
-	// 		'pre-sal e nosso',
-	// 		'discriminalizacao das drogas',
-	// 		'laicidade do Estado',
-	// 		'anula STF',
-	// 		'luta contra o racismo',
-	// 		'contra o golpismo',
-	// 		'defesa da universidade publica',
-	// 		'lute como uma menina'],
-	// 	'urls' : [
-	// 		'https://jovensdeesquerda.wordpress.com/',
-	// 		'http://www.facebook.com/ticosantacruz/',
-	// 		'http://www.facebook.com/MemesMessianicos/',
-	// 		'https://www.conversaafiada.com.br/pig',
-	// 		'http://www.facebook.com/Brasil247/',
-	// 		'http://www.facebook.com/antialienacaomental/',
-	// 		'http://www.facebook.com/Falandoverdadesbr2/',
-	// 		'http://www.facebook.com/guerrilheirosvirtuais/',
-	// 		'http://www.facebook.com/PedalaDireita/',
-	// 		'http://www.tijolaco.com.br/blog/',
-	// 		'http://www.facebook.com/HistoriasDaEsquerda/',
-	// 		'http://vermelho.org.br/',
-	// 		'http://www.mabnacional.org.br/',
-	// 		'http://www.facebook.com/DilmaResistente/',
-	// 		'http://www.facebook.com/PragmatismoPolitico/',
-	// 		'http://www.pragmatismopolitico.com.br/',
-	// 		'http://www.plantaobrasil.net/',
-	// 		'http://compartilhe13.blogspot.com/',
-	// 		'http://territoriolivre.org/',
-	// 		'http://www.mtst.org/',
-	// 		'https://www.revistaforum.com.br/',
-	// 		'http://petistasdecoracao.blogspot.com/2015/10/petistas-de-coracao.html',
-	// 		'https://www.thinkolga.com/',
-	// 		'https://feminismosemdemagogia.wordpress.com/',
-	// 		'http://www.empodereduasmulheres.com/',
-	// 		'https://www.viomundo.com.br/',
-	// 		'https://www.esquerda.net/',
-	// 		'http://dilma.com.br/',
-	// 		'https://www.cut.org.br/',
-	// 		'http://brasildebate.com.br/',
-	// 		'http://www.une.org.br/',
-	// 		'http://movimientospopulares.org/',
-	// 		'https://www.facebook.com/eremitadeesquerda/',
-	// 		'https://www.facebook.com/CamaradaComunista/',
-	// 		'https://www.facebook.com/VerdadeSemManipulacao/',]
-	// },
-	// {
-	// 	'email' : 'resocie.homem@gmail.com',
-	// 	'pass' : 'Tarrow2016',
-	// 	'queries' : [
-	// 		'como fazer churrasco',
-	// 		'tabela brasileirão',
-	// 		'como dar um no de gravata?',
-	// 		'roupas masculinas',
-	// 		'câncer de próstata',
-	// 		'saúde masculina',
-	// 		'impotência sexual',
-	// 		'viagra',
-	// 		'paternidade',
-	// 		'acessórios masculinos',
-	// 		'ejaculação precoce'],
-	// 	'urls' : [
-	// 		'https://www.facebook.com/churrasqueadasoficial/',
-	// 		'https://www.facebook.com/RevistaAutoesporte/',
-	// 		'https://www.facebook.com/RevistaPlacar/',
-	// 		'https://www.facebook.com/autoesportetv/',
-	// 		'https://www.facebook.com/AUTOVideosBrasil/',
-	// 		'https://www.facebook.com/grupolance/',
-	// 		'https://www.facebook.com/webmotors/',
-	// 		'https://www.facebook.com/BRShoploja/',
-	// 		'https://www.facebook.com/cartolafc/',
-	// 		'https://www.facebook.com/NitroCircusPOR/',
-	// 		'https://www.webmotors.com.br/',
-	// 		'https://www.lojasrenner.com.br/c/masculino/-/N-1xeiyoy/p1',
-	// 		'https://www.kanui.com.br/roupas-masculinas/',
-	// 		'https://www.dafiti.com.br/roupas-masculinas/',]
-	// },
-	// {
-	// 	'email' : 'resocie.mulher@gmail.com',
-	// 	'pass' : 'Tarrow2016',
-	// 	'queries' : [
-	// 		'como amamentar?',
-	// 		'roupas femininas',
-	// 		'sintomas de menopausa',
-	// 		'tensão pré-menstrual',
-	// 		'cólica menstrual',
-	// 		'maternidade',
-	// 		'depressão pós-parto',
-	// 		'câncer de mama',
-	// 		'câncer de útero',
-	// 		'saúde feminina',
-	// 		'acessórios femininos'],
-	// 	'urls' : [
-	// 		'https://www.facebook.com/panelaterapia/',
-	// 		'https://www.facebook.com/roteirosdecharme/',
-	// 		'https://www.facebook.com/babycombr/',
-	// 		'https://www.facebook.com/bibliadamulher/',
-	// 		'https://www.facebook.com/maquiadoradesucesso/',
-	// 		'https://www.facebook.com/avonbr/?brand_redir=47274846623',
-	// 		'https://www.facebook.com/LojaVidaeCor/',
-	// 		'https://www.facebook.com/sazonbrasil/',
-	// 		'https://www.facebook.com/salonline/',
-	// 		'https://brasil.babycenter.com/',
-	// 		'https://www.facebook.com/meumarido',
-	// 		'https://www.enjoei.com.br/',
-	// 		'http://www.bibliadamulher.com.br/',
-	// 		'https://www.dicasdemulher.com.br/',]
-	// },
-	{
-		'email' : 'alegomes@gmail.com',
-		'pass' : '!2#Pipoc@',
-		'queries' : [
-			'capoeira',
-			'bike',
-			'dança'],
-		'urls' : [
-			'http://www.terra.com.br',
-			'http://www.nytimes.com']
-	},
-	{
-		'email' : 'alegomes@wso2brasil.com.br',
-		'pass' : '!2#Pipoc@',
-		'queries' : [
-			'apim',
-			'iot',
-			'esb',
-			'identity server'],
-		'urls' : [
-			'http://www.wso2.com',
-			'http://www.redhat.com',
-			'http://www.microsoft.com']
-	}
-]
-
-// var email = 'alegomes@wso2brasil.com.br'
-// var pass = '!2#Pipoc@' 
-// var queries = ['apim','iot','esb']
-// var urls = ['http://www.wso2.com',
-// 			'http://www.redhat.com',
-// 			'http://www.microsoft.com']
-
+casper.log('Logging in...', 'debug')
 login(email, pass)
 
 for(var q=0; q < queries.length; q++) {
 	query = queries[q]
-	casper.log('Searching for '+query,'debug')
+	casper.log('Searching for "' + query + "'", 'debug')
 	searchFor(queries[q]);
 
 }
