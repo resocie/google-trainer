@@ -1,5 +1,6 @@
 Pre-reqs:
 
-- Python 3.6+
-- PhantomJS 
-- CasperJS
+- Python 3.6+ (pyenv)
+- PhantomJS (apt-get, brew)
+- CasperJS (npm)
+- dateformat, sprintf-js (npm)
