@@ -1,7 +1,7 @@
 const fs = require("fs");
 // var util = require('util');
 var dateFormat = require('dateformat');
-// var sprintf = require('sprintf-js').sprintf
+var sprintf = require('sprintf-js').sprintf
 // var csv = require("csv");
 
 // const env = require('system').env;

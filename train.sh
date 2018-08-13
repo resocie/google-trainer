@@ -1,23 +1,56 @@
 #!/bin/bash
 
-echo
-echo
-echo "***************************************************"
-echo "$(date '+%d/%m/%Y %H:%M:%S') Starting new training"
-echo "***************************************************"
-echo
-echo
-python train.py
-echo
-echo
+function wait {
+	n=$RANDOM
+	echo "Random number chosen: $n"
+	let "n %= 3600"; 
+	echo "Mod 3600: $n"
+	let "m = n/60"
+	echo "Divided/60: $m"
 
-echo
-echo "Packing stuff now..."
-echo
-DIR=$(find -s output -type d | tail -1 | cut -d '/' -f2)
-cd output
-zip -r $DIR.zip $DIR
-cd ..
+	echo "$(date '+%d/%m/%Y %H:%M:%S') Sleeping now for $m min"
+	sleep $n
+	echo $(date '+%d/%m/%Y %H:%M:%S')" Waking up after $m min of sleeping"
+}
 
-echo "$(date '+%d/%m/%Y %H:%M:%S') Sleeping now for 30 min"
-sleep 1800
+function train {
+	echo
+	echo
+	echo "***************************************************"
+	echo "$(date '+%d/%m/%Y %H:%M:%S') Starting new training"
+	echo "***************************************************"
+	echo
+	echo
+	python train.py
+	echo
+	echo
+
+	echo
+	echo "Packing stuff now..."
+	echo
+	DIR=$(find -s output -type d | tail -1 | cut -d '/' -f2)
+	TIMESTAMP=$(echo $DIR | cut -d- -f1)
+	cd output
+	zip -r $DIR.zip $DIR $LOGFILE $TIMESTAMP*.txt			
+	cd ..
+
+	DATADIR="/Users/alegomes/GDrive/2018/unb/ipol/resocie/projetos/eleicoes 2018/obm/data/2. training"/
+
+	echo "Moving output/$DIR.zip to $DATADIR"
+	mv output/$DIR.zip "$DATADIR"
+	echo "Moving ../$LOGFILE to $DATADIR/logs"
+	mv ../$LOGFILE "$DATADIR/logs"
+	echo "Moving $TIMESTAMP*.txt to $DATADIR/logs"
+	mv $TIMESTAMP*.txt "$DATADIR/logs"
+
+	echo "Removing $DIR"
+	rm -rf $DIR
+
+	wait
+}
+
+LOGFILE=$(date +%Y%m%d%H%M)-while.txt
+
+while(true); do 
+	train | tee -a $LOGFILE 
+done

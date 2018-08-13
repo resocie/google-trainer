@@ -4,12 +4,16 @@ import os
 from subprocess import Popen, PIPE
 import datetime
 
+print("\n\n")
+
 now = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d%H%M')
 folder = now + '-training'
+
 
 users_filename = 'input/users-prod.csv'
 # f = open('input/users-test.csv', 'r')
 
+print('Reading %s file' % users_filename)
 users_reader = csv.reader(open(users_filename))
 for row in users_reader:
 	print('row=%s' % row)
@@ -20,6 +24,7 @@ for row in users_reader:
 	queries = ""
 	queries_filename = 'input/queries-%s.csv' % alias 
 	queries_reader = csv.reader(open(queries_filename))
+	print('Reading %s file' % queries_filename)
 	for query_row in queries_reader:
 		query = query_row[0]
 		# print(query)
@@ -32,6 +37,7 @@ for row in users_reader:
 	urls = ""
 	urls_filename = 'input/urls-%s.csv' % alias 
 	urls_reader = csv.reader(open(urls_filename))
+	print('Reading %s file' % urls_filename)
 	for url_row in urls_reader:
 		url = url_row[0]
 		# print(url)
