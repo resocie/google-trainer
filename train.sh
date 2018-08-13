@@ -25,26 +25,36 @@ function train {
 	echo
 	echo
 
-	echo
-	echo "Packing stuff now..."
-	echo
-	DIR=$(find -s output -type d | tail -1 | cut -d '/' -f2)
-	TIMESTAMP=$(echo $DIR | cut -d- -f1)
-	cd output
-	zip -r $DIR.zip $DIR $LOGFILE $TIMESTAMP*.txt			
-	cd ..
+	# echo "MacOS or Linux?"
+	# OS=$(uname)
+	# if [[ "$OS" == "Darwin" ]]; then
+	# 	echo "MacOS detected."
+	# 	FINDOPTS="-s"
+	# elif [[ "$OS" == "Linux" ]]; then
+	# 	echo "Linux detected."
+	# 	FINDOPTS=""
+	# fi
 
-	DATADIR="/Users/alegomes/GDrive/2018/unb/ipol/resocie/projetos/eleicoes 2018/obm/data/2. training"/
+	# echo
+	# echo "Packing stuff now..."
+	# echo
+	# DIR=$(find $FINDOPTS output -type d | tail -1 | cut -d '/' -f2)
+	# TIMESTAMP=$(echo $DIR | cut -d- -f1)
+	# cd output
+	# zip -r $DIR.zip $DIR $LOGFILE $TIMESTAMP*.txt			
+	# cd ..
 
-	echo "Moving output/$DIR.zip to $DATADIR"
-	mv output/$DIR.zip "$DATADIR"
-	echo "Moving ../$LOGFILE to $DATADIR/logs"
-	mv ../$LOGFILE "$DATADIR/logs"
-	echo "Moving $TIMESTAMP*.txt to $DATADIR/logs"
-	mv $TIMESTAMP*.txt "$DATADIR/logs"
+	# DATADIR="/Users/alegomes/GDrive/2018/unb/ipol/resocie/projetos/eleicoes 2018/obm/data/2. training"/
 
-	echo "Removing $DIR"
-	rm -rf $DIR
+	# echo "Moving output/$DIR.zip to $DATADIR"
+	# mv output/$DIR.zip "$DATADIR"
+	# echo "Moving ../$LOGFILE to $DATADIR/logs"
+	# mv ../$LOGFILE "$DATADIR/logs"
+	# echo "Moving $TIMESTAMP*.txt to $DATADIR/logs"
+	# mv $TIMESTAMP*.txt "$DATADIR/logs"
+
+	# echo "Removing $DIR"
+	# rm -rf $DIR
 
 	wait
 }
