@@ -52,5 +52,5 @@ function train {
 LOGFILE=$(date +%Y%m%d%H%M)-while.txt
 
 while(true); do 
-	train | tee -a $LOGFILE 
+	train | tee -a output/$LOGFILE 
 done
