@@ -81,7 +81,7 @@ for row in users_reader:
 	print('Status code',status)
 	if status != 0:
 		print('CasperJS Failed')
-		sys.exit('Deu pau no python')
+		sys.exit('CasperJS falhou')
 
 
 
