@@ -20,4 +20,7 @@ for files in glob.glob("input/urls-*.csv"):
 			print('Status code',status)
 			if status != 0:
 				print('CasperJS Failed')
-				sys.exit('CasperJS falhou')
+				err = open('urlscomproblema.txt', 'a')
+				err.write(url)
+				err.close()
+				# sys.exit('CasperJS falhou')
