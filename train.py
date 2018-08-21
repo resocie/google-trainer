@@ -10,7 +10,7 @@ folder = now + '-training'
 
 
 users_filename = 'input/users-prod.csv'
-f = open('input/users-test.csv', 'r')
+f = open(users_filename, 'r')
 
 print('Reading %s file' % users_filename)
 users_reader = csv.reader(open(users_filename))
