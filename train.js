@@ -184,6 +184,7 @@ var logout = function(email) {
 // start_as_ms = new Date();
 // start_as_str = dateFormat(start_as_ms, "yyyymmddHHMM");
 
+
 var casper = require('casper').create({
 	verbose: true,
 	logLevel: 'debug',
@@ -195,6 +196,16 @@ var casper = require('casper').create({
     }
 });
 casper.log('Creating casper object created', 'debug')
+
+// casper.then(function() {
+//     this.exit(2);
+// });
+
+// throw new Error('casperjs fail');
+
+// casper.thenOpen('www.terra.com.br', function() {
+// 	casper.echo('visita feita')
+// })
 
 // Events
 casper.on('waitFor.timeout', logWaitForTimeout);

@@ -1,22 +1,22 @@
+import sys
 import csv
 import os
 # from subprocess import call
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 import datetime
-
-print("\n\n")
 
 now = datetime.datetime.strftime(datetime.datetime.now(), '%Y%m%d%H%M')
 folder = now + '-training'
 
 
 users_filename = 'input/users-prod.csv'
-# f = open('input/users-test.csv', 'r')
+f = open('input/users-test.csv', 'r')
 
 print('Reading %s file' % users_filename)
 users_reader = csv.reader(open(users_filename))
 for row in users_reader:
-	print('row=%s' % row)
+	print("------------------------------------------------")
+	print('Reading next user in %s: %s' % (users_filename,row))
 	email = row[0]
 	passwd = row[1]
 	alias = row[2]
@@ -47,11 +47,21 @@ for row in users_reader:
 			urls = url
 
 
-	print("----------------------------------")
-	print("[%s] Starting %s's training" % (now,alias))
+	# print("\n\n")
+	print("\n[%s] Starting training of %s" % (now,alias))
+	print("")
 
-	print('queries='+queries)
-	print('urls='+urls)
+	print('Terms to be Googled: %s\n' % queries)
+	print('URLs to be visited: %s\n' % urls)
+
+	casper_cmd = "./casperjs train.js %s %s %s %s %s %s" % (folder, email, passwd, alias, queries, urls)
+	casper_logfile = "output/%s-treinamento.%s.output.txt" % (now,alias)
+	print('Calling CasperJS script to emulate browser navigation...')
+	print('Check file %s for details' % casper_logfile)
+	print('Here is the command about to be executed:\n')
+	print('$ %s\n' % casper_cmd)
+
+	sys.stdout.flush()
 
 	# call(["./casperjs", "train.js", folder, email, passwd, alias, queries, urls, "| tee -a", "output/treinamento.$(date +%Y%m%d%H%M).output.txt"])
 
@@ -60,13 +70,23 @@ for row in users_reader:
 	# output, err = p.communicate()
 	# rc = p.returncode
 
+
+
 	p1 = Popen(["./casperjs", "train.js", folder, email, passwd, alias, queries, urls], stdout=PIPE)
-	p2 = Popen(["tee", "output/%s-treinamento.%s.output.txt" % (now,alias)], stdin=p1.stdout, stdout=PIPE)
+	p2 = Popen(["tee", casper_logfile], stdin=p1.stdout)
 	p1.stdout.close()  # Allow p1 to receive a SIGPIPE if p2 exits.
 	output = p2.communicate()[0]
+	status = p2.returncode
+
+	print('Status code',status)
+	if status != 0:
+		print('CasperJS Failed')
+		sys.exit('Deu pau no python')
+
+
 
 	# os.system("cd output; zip %s-training.zip %s-training/*; cd .." % (now,now))
-	print("[%s] Finishing %s's training" % (now,alias))
+	print("[%s] Finishing %s's training\n\n" % (now,alias))
 
 	# outfile = open("output/%s/treinamento.%s.%s.output.txt" % (folder,alias,now))
 	# outfile.write(output)

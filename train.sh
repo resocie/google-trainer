@@ -19,11 +19,19 @@ function train {
 	echo "***************************************************"
 	echo "$(date '+%d/%m/%Y %H:%M:%S') Starting new training"
 	echo "***************************************************"
-	echo
-	echo
+
 	python train.py
+	local status=$?
+    if [ $status -ne 0 ]; then
+    	echo
+    	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        echo "!!!!!!!!! TRAINING FAILED !!!!!!!!!"
+        echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+        exit -1
+    fi
 	echo
 	echo
+
 
 	# echo "MacOS or Linux?"
 	# OS=$(uname)
@@ -59,7 +67,7 @@ function train {
 	wait
 }
 
-LOGFILE=$(date +%Y%m%d%H%M)-while.txt
+LOGFILE=$(date +%Y%m%d%H%M)-screen.txt
 
 while(true); do 
 	train | tee -a output/$LOGFILE 
